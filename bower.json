@@ -1,0 +1,10 @@
+{
+  "name": "meteo-mobile",
+  "version": "0.0.0",
+  "dependencies": {
+    "requirejs": "2.1.8",
+    "threejs": "r63",
+    "stats.js": "r8"
+  },
+  "devDependencies": {}
+}
