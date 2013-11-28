@@ -4,8 +4,15 @@ var requirejsOptions = {
   paths: {
     'stats': 'bower_components/stats.js/build/Stats',
     'threejs': 'bower_components/threejs/build/three.min',
-    'detector': 'lib/Detector'
-  },
+    'detector': 'lib/Detector',
+    'trackball': 'lib/TrackballControls'
+    },
+    shim: {
+        'trackball': {
+            deps: ['threejs'],
+            exports: 'trackball'
+        }
+    }
 };
 
 if (typeof exports !== "undefined" && typeof module !== "undefined") {
@@ -20,17 +27,18 @@ if (typeof requirejs !== "undefined" && requirejs.config) {
 define([
     'stats',
     'threejs',
-    'detector'
-], function() {
-    "use strict";
-    var webglEl = document.getElementById('webgl');
+    'detector',
+    'trackball'
+    ], function() {
+        "use strict";
+        var webglEl = document.getElementById('webgl');
 
-    if (!Detector.webgl) {
-        Detector.addGetWebGLMessage(webglEl);
-        return;
-    }
+        if (!Detector.webgl) {
+            Detector.addGetWebGLMessage(webglEl);
+            return;
+        }
 
-    var width  = window.innerWidth,
+        var width  = window.innerWidth,
         height = window.innerHeight;
 
 
@@ -43,8 +51,8 @@ define([
 
     // Earth params
     var radius   = 0.5,
-        segments = 32,
-        rotation = 6;
+    segments = 32,
+    rotation = 6;
 
     var scene = new THREE.Scene();
 
@@ -96,7 +104,7 @@ define([
                 specularMap: THREE.ImageUtils.loadTexture('images/water_4k.png'),
                 specular:    new THREE.Color('grey')
             })
-        );
+            );
     }
 
     function createClouds(radius, segments) {
@@ -106,7 +114,7 @@ define([
                 map:         THREE.ImageUtils.loadTexture('images/fair_clouds_4k.png'),
                 transparent: true
             })
-        );
+            );
     }
 
     function createStars(radius, segments) {
@@ -116,6 +124,6 @@ define([
                 map:  THREE.ImageUtils.loadTexture('images/galaxy_starfield.png'),
                 side: THREE.BackSide
             })
-        );
+            );
     }
 });
