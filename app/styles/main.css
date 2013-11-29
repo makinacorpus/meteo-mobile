@@ -9,3 +9,8 @@ body {
 .webgl-error { font: 15px/30px monospace; text-align: center; color: #fff; margin: 50px; }
 .webgl-error a { color: #fff; }
 
+#buttons {
+    position: fixed;
+    top: 0;
+}
+

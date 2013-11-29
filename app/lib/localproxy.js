@@ -9,13 +9,11 @@ define(['jquery'], function($) {
             self.token_url = token_url;
         };
 
-        self.getPath = function(path, callback) {
-            getToken(function(token) {
-                callback(path.indexOf("?") >= 0 ? path + "&token=" + token : path + "?token=" + token);
-            });
+        self.getPath = function(path) {
+            return path.indexOf("?") >= 0 ? path + "&token=" + self.token : path + "?token=" + token;
         };
 
-        getToken = function(callback) {
+        self.getToken = function(callback) {
             if(self.token) callback(self.token);
             $.ajax({
                 //type: "POST",
@@ -31,6 +29,7 @@ define(['jquery'], function($) {
                 dataType: 'json'
             });
         };
+
         return self;
     };
     return LocalProxy();

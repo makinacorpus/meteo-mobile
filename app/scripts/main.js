@@ -32,13 +32,14 @@ if (typeof requirejs !== 'undefined' && requirejs.config) {
 // Adapted by Makina Corpus
 define([
     'localproxy',
+    'jquery',
     'stats',
     'threejs',
     'detector',
     'trackball'
 ], function(PROXY) {
     'use strict';
-    PROXY.setCredentials('not-me', '****', 'http://synchrone.meteo.fr/public/api/custom/tokens/');
+    PROXY.setCredentials('not-me', '****', 'http://screamshot.makina-corpus.net/public/api/custom/tokens/');
 
     var webglEl = document.getElementById('webgl');
 
@@ -62,80 +63,99 @@ define([
     var radius   = 0.5,
     segments = 32,
     rotation = 6;
+    var layers = [];
 
-PROXY.getPath('http://synchrone.meteo.fr/public/api/ogc/wms/raster_basemap/?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=physicalmap&STYLES=&FORMAT=image%2Fjpeg&TRANSPARENT=true&HEIGHT=1024&WIDTH=2048&CRS=EPSG%3A4326&BBOX=-90,-180,90,180&token=34c6e7ba52d74eae900d2112b64a1752',
-    function(path) {
-    var scene = new THREE.Scene();
+    PROXY.getToken(function(path) {
+        var scene = new THREE.Scene();
 
-    var camera = new THREE.PerspectiveCamera(45, width / height, 0.01, 1000);
-    camera.position.z = 1.5;
+        var camera = new THREE.PerspectiveCamera(45, width / height, 0.01, 1000);
+        camera.position.z = 1.5;
 
-    var renderer = new THREE.WebGLRenderer();
-    renderer.setSize(width, height);
+        var renderer = new THREE.WebGLRenderer();
+        renderer.setSize(width, height);
 
-    scene.add(new THREE.AmbientLight(0x333333));
+        scene.add(new THREE.AmbientLight(0x333333));
 
-    var light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(5,3,5);
-    scene.add(light);
+        var light = new THREE.DirectionalLight(0xffffff, 1);
+        light.position.set(5,3,5);
+        scene.add(light);
 
-    var sphere = createSphere(radius, segments, path);
-    sphere.rotation.y = rotation;
-    scene.add(sphere);
+        var sphere = createSphere(radius, segments, path);
+        sphere.rotation.y = rotation;
+        scene.add(sphere);
 
-    var clouds = createClouds(radius, segments);
-    clouds.rotation.y = rotation;
-    scene.add(clouds);
+        var stars = createStars(90, 64);
+        scene.add(stars);
 
-    var stars = createStars(90, 64);
-    scene.add(stars);
+        var controls = new THREE.TrackballControls(camera);
 
-    var controls = new THREE.TrackballControls(camera);
+        webglEl.appendChild(renderer.domElement);
 
-    webglEl.appendChild(renderer.domElement);
+        render();
 
-    render();
+        function addLayer(path) {
+            var layer = createLayer(path, radius, segments);
+            scene.add(layer);
+            layers.push(layer);
+            render();
+        }
 
-    function render() {
-        controls.update();
-        stats.update();
-        sphere.rotation.y += 0.0005;
-        clouds.rotation.y += 0.0005;
-        requestAnimationFrame(render);
-        renderer.render(scene, camera);
-    }
+        $("#buttons button").on('click', function(e) {
+            var path = 'http://screamshot.makina-corpus.net/public/api/ogc/wms/';
+            path += e.target.attributes['data-layer-service'].value; //satellite
+            path += '/?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=';
+            path += e.target.attributes['data-layer-name'].value; //geostationary_hrv_cloud
+            path += '&STYLES=&FORMAT=';
+            path += encodeURIComponent(e.target.attributes['data-layer-format'].value); //image%2Fpng
+            path += '&TRANSPARENT=true&HEIGHT=1024&WIDTH=2048&CRS=EPSG%3A4326&BBOX=-90,-180,90,180';
+            addLayer(path);
+        })
 
-    function createSphere(radius, segments, path) {
-        return new THREE.Mesh(
-            new THREE.SphereGeometry(radius, segments, segments),
-            new THREE.MeshPhongMaterial({
-                map:         THREE.ImageUtils.loadTexture(path),
-                bumpMap:     THREE.ImageUtils.loadTexture('images/elev_bump_4k.jpg'),
-                bumpScale:   0.01,
-                specularMap: THREE.ImageUtils.loadTexture('images/water_4k.png'),
-                specular:    new THREE.Color('grey')
-            })
-        );
-    }
+        function render() {
+            controls.update();
+            stats.update();
+            sphere.rotation.y += 0.0005;
+            for(var i=0;i<layers.length;i++) {
+                layers[i].rotation.y += 0.0005;   
+            }
+            //clouds.rotation.y += 0.0005;
+            requestAnimationFrame(render);
+            renderer.render(scene, camera);
+        }
 
-    function createClouds(radius, segments) {
-        return new THREE.Mesh(
-            new THREE.SphereGeometry(radius + 0.003, segments, segments),
-            new THREE.MeshPhongMaterial({
-                map:         THREE.ImageUtils.loadTexture('images/fair_clouds_4k.png'),
-                transparent: true
-            })
+        function createSphere(radius, segments) {
+            return new THREE.Mesh(
+                new THREE.SphereGeometry(radius, segments, segments),
+                new THREE.MeshPhongMaterial({
+                    map:         THREE.ImageUtils.loadTexture(PROXY.getPath(
+                        'http://screamshot.makina-corpus.net/public/api/ogc/wms/raster_basemap/?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=physicalmap&STYLES=&FORMAT=image%2Fjpeg&TRANSPARENT=true&HEIGHT=1024&WIDTH=2048&CRS=EPSG%3A4326&BBOX=-90,-180,90,180')),
+                    bumpMap:     THREE.ImageUtils.loadTexture('images/elev_bump_4k.jpg'),
+                    bumpScale:   0.01,
+                    specularMap: THREE.ImageUtils.loadTexture('images/water_4k.png'),
+                    specular:    new THREE.Color('grey')
+                })
             );
-    }
+        }
 
-    function createStars(radius, segments) {
-        return new THREE.Mesh(
-            new THREE.SphereGeometry(radius, segments, segments),
-            new THREE.MeshBasicMaterial({
-                map:  THREE.ImageUtils.loadTexture('images/galaxy_starfield.png'),
-                side: THREE.BackSide
-            })
-            );
-    }
+        function createLayer(path, radius, segments) {
+            return new THREE.Mesh(
+                new THREE.SphereGeometry(radius + 0.003, segments, segments),
+                new THREE.MeshPhongMaterial({
+                    //map:         THREE.ImageUtils.loadTexture('images/fair_clouds_4k.png'),
+                    map:         THREE.ImageUtils.loadTexture(PROXY.getPath(path)),
+                    transparent: true
+                })
+                );
+        }
+
+        function createStars(radius, segments) {
+            return new THREE.Mesh(
+                new THREE.SphereGeometry(radius, segments, segments),
+                new THREE.MeshBasicMaterial({
+                    map:  THREE.ImageUtils.loadTexture('images/galaxy_starfield.png'),
+                    side: THREE.BackSide
+                })
+                );
+        }
     });
 });

@@ -13,6 +13,18 @@
     </head>
 <body>
     <div id="webgl"></div>
+    <div id="buttons">
+        <button id="clouds"
+            data-layer-service="satellite"
+            data-layer-name="geostationary_hrv_cloud"
+            data-layer-format="image/png"
+            >Clouds</button>
+        <button id="temperatures"
+            data-layer-service="model"
+            data-layer-name="THETA__ISO_TP_2000"
+            data-layer-format="image/png"
+            >Temperatures</button>
+    </div>
     <script data-main="scripts/main" src="bower_components/requirejs/require.js"></script>
 
 </body></html>
