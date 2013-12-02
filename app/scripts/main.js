@@ -64,6 +64,7 @@ define([
     segments = 32,
     rotation = 6;
     var layers = [];
+    var textures = {};
 
     PROXY.getToken(function(path) {
         var scene = new THREE.Scene();
@@ -94,22 +95,37 @@ define([
         render();
 
         function addLayer(path) {
-            var layer = createLayer(path, radius, segments);
+            var layer = createLayer(textures[path], radius, segments);
+            cleanLayers();
             scene.add(layer);
             layers.push(layer);
-            render();
         }
 
-        $("#buttons button").on('click', function(e) {
+        function cleanLayers(path) {
+            for(var i=0;i<layers.length;i++) {
+                scene.remove(layers[i]);
+            }
+            layers = [];
+        }
+
+        $("#buttons button").each(function() {
             var path = 'http://screamshot.makina-corpus.net/public/api/ogc/wms/';
-            path += e.target.attributes['data-layer-service'].value; //satellite
+            path += this.attributes['data-layer-service'].value; //satellite
             path += '/?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=';
-            path += e.target.attributes['data-layer-name'].value; //geostationary_hrv_cloud
+            path += this.attributes['data-layer-name'].value; //geostationary_hrv_cloud
             path += '&STYLES=&FORMAT=';
-            path += encodeURIComponent(e.target.attributes['data-layer-format'].value); //image%2Fpng
+            path += encodeURIComponent(this.attributes['data-layer-format'].value); //image%2Fpng
             path += '&TRANSPARENT=true&HEIGHT=1024&WIDTH=2048&CRS=EPSG%3A4326&BBOX=-90,-180,90,180';
-            addLayer(path);
-        })
+            this.setAttribute('data-layer-path', path);
+            var button = this;
+            textures[path] = THREE.ImageUtils.loadTexture(PROXY.getPath(path), new THREE.UVMapping(), function() {
+                console.log(path + " loaded");
+                $(button).removeAttr("disabled");
+            });
+            $(this).on('click', function(e) {
+                addLayer(e.target.attributes['data-layer-path'].value);
+            });
+        });
 
         function render() {
             controls.update();
@@ -137,12 +153,13 @@ define([
             );
         }
 
-        function createLayer(path, radius, segments) {
+        function createLayer(texture, radius, segments) {
             return new THREE.Mesh(
                 new THREE.SphereGeometry(radius + 0.003, segments, segments),
                 new THREE.MeshPhongMaterial({
                     //map:         THREE.ImageUtils.loadTexture('images/fair_clouds_4k.png'),
-                    map:         THREE.ImageUtils.loadTexture(PROXY.getPath(path)),
+                    //map:         THREE.ImageUtils.loadTexture(PROXY.getPath(path)),
+                    map: texture,
                     transparent: true
                 })
                 );

@@ -10,7 +10,7 @@ define(['jquery'], function($) {
         };
 
         self.getPath = function(path) {
-            return path.indexOf("?") >= 0 ? path + "&token=" + self.token : path + "?token=" + token;
+            return path.indexOf("?") >= 0 ? path + "&token=" + self.token : path + "?token=" + this.token;
         };
 
         self.getToken = function(callback) {
