@@ -3,9 +3,7 @@ var requirejsOptions = {
     wrap: true,
     paths: {
         'jquery': 'bower_components/jquery/jquery.min',
-        'stats': 'bower_components/stats.js/build/Stats',
         'threejs': 'bower_components/threejs/build/three.min',
-        'detector': 'lib/Detector',
         'trackball': 'lib/TrackballControls',
         'localproxy': 'lib/localproxy',
     },
@@ -33,31 +31,14 @@ if (typeof requirejs !== 'undefined' && requirejs.config) {
 define([
     'localproxy',
     'jquery',
-    'stats',
     'threejs',
-    'detector',
     'trackball'
 ], function(PROXY) {
     'use strict';
     PROXY.setCredentials('not-me', '****', 'http://screamshot.makina-corpus.net/public/api/custom/tokens/');
 
-    var webglEl = document.getElementById('webgl');
-
-    if (!Detector.webgl) {
-        Detector.addGetWebGLMessage(webglEl);
-        return;
-    }
-
     var width  = window.innerWidth,
     height = window.innerHeight;
-
-
-    // Stats
-    var stats = new Stats();
-    stats.domElement.style.position = 'absolute';
-    stats.domElement.style.bottom = '0px';
-    stats.domElement.style.zIndex = 100;
-    webglEl.appendChild(stats.domElement);
 
     // Earth params
     var radius   = 0.5,
@@ -129,7 +110,6 @@ define([
 
         function render() {
             controls.update();
-            stats.update();
             sphere.rotation.y += 0.0005;
             for(var i=0;i<layers.length;i++) {
                 layers[i].rotation.y += 0.0005;   
