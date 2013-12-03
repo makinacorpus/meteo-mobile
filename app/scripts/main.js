@@ -4,8 +4,13 @@ var requirejsOptions = {
     paths: {
         'jquery': 'bower_components/jquery/jquery.min',
         'threejs': 'bower_components/threejs/build/three.min',
+        'cocoonjs': 'lib/CocoonJS',
+        'cocoonjs_app': 'lib/CocoonJS_App',
+        'cocoonjs_app_forcocoonjs': 'lib/CocoonJS_App_ForCocoonJS',
         'trackball': 'lib/TrackballControls',
         'localproxy': 'lib/localproxy',
+        'lib': 'lib/',
+        'app': 'scripts/'
     },
     shim: {
         'trackball': {
@@ -15,7 +20,9 @@ var requirejsOptions = {
         'localproxy': {
             deps: ['jquery'],
             exports: 'localproxy'
-        }
+        },
+        'cocoonjs_app': ['cocoonjs'],
+        'cocoonjs_app_forcocoonjs': ['cocoonjs']
     }
 };
 
@@ -32,7 +39,10 @@ define([
     'localproxy',
     'jquery',
     'threejs',
-    'trackball'
+    'trackball',
+    'cocoonjs',
+    'cocoonjs_app',
+    'cocoonjs_app_forcocoonjs'
 ], function(PROXY) {
     'use strict';
     PROXY.setCredentials('not-me', '****', 'http://screamshot.makina-corpus.net/public/api/custom/tokens/');
@@ -48,6 +58,30 @@ define([
     var textures = {};
 
     PROXY.getToken(function(path) {
+        // UI
+        CocoonJS.App.onLoadInTheWebViewSucceed.addEventListener(function(pageURL) {
+            // Show the webview. By default, the webview is hidden.
+            CocoonJS.App.showTheWebView();
+        });
+
+        CocoonJS.App.onLoadInTheWebViewFailed.addEventListener(function(pageURL) {
+            console.error("Could not load the HTML file in the webview");
+
+        });
+
+        CocoonJS.App.loadInTheWebView("ui.html");
+
+        $(window).on('pathLoaded', function(e, path) {
+            loadFilterTexture(path);
+        });
+
+        function loadFilterTexture(path) {
+            textures[path] = THREE.ImageUtils.loadTexture(PROXY.getPath(path), new THREE.UVMapping(), function() {
+                console.log(path + " loaded");
+                CocoonJS.App.forward("$(window).trigger('textureLoaded');");
+            });
+        }
+
         var scene = new THREE.Scene();
 
         var camera = new THREE.PerspectiveCamera(45, width / height, 0.01, 1000);
@@ -71,7 +105,7 @@ define([
 
         var controls = new THREE.TrackballControls(camera);
 
-        webglEl.appendChild(renderer.domElement);
+        document.body.appendChild(renderer.domElement);
 
         render();
 
@@ -88,25 +122,6 @@ define([
             }
             layers = [];
         }
-
-        $("#buttons button").each(function() {
-            var path = 'http://screamshot.makina-corpus.net/public/api/ogc/wms/';
-            path += this.attributes['data-layer-service'].value; //satellite
-            path += '/?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&LAYERS=';
-            path += this.attributes['data-layer-name'].value; //geostationary_hrv_cloud
-            path += '&STYLES=&FORMAT=';
-            path += encodeURIComponent(this.attributes['data-layer-format'].value); //image%2Fpng
-            path += '&TRANSPARENT=true&HEIGHT=1024&WIDTH=2048&CRS=EPSG%3A4326&BBOX=-90,-180,90,180';
-            this.setAttribute('data-layer-path', path);
-            var button = this;
-            textures[path] = THREE.ImageUtils.loadTexture(PROXY.getPath(path), new THREE.UVMapping(), function() {
-                console.log(path + " loaded");
-                $(button).removeAttr("disabled");
-            });
-            $(this).on('click', function(e) {
-                addLayer(e.target.attributes['data-layer-path'].value);
-            });
-        });
 
         function render() {
             controls.update();

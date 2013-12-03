@@ -1,0 +1,21 @@
+<html>
+<head>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <div id="buttons">
+        <button id="clouds" disabled="disabled"
+            data-layer-service="satellite"
+            data-layer-name="geostationary_hrv_cloud"
+            data-layer-format="image/png"
+            >Clouds</button>
+        <button id="temperatures" disabled="disabled"
+            data-layer-service="model"
+            data-layer-name="THETA__ISO_TP_2000"
+            data-layer-format="image/png"
+            >Temperatures</button>
+    </div>
+
+    <script data-main="scripts/ui" src="bower_components/requirejs/require.js"></script>
+</body>
+</html>
