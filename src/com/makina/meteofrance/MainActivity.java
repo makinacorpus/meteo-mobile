@@ -18,7 +18,9 @@ package com.makina.meteofrance;
 import shared.ui.actionscontentview.ActionsContentView;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -39,7 +41,13 @@ public class MainActivity extends FragmentActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		if( Build.VERSION.SDK_INT >= 9){
+		    StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
 
+		    StrictMode.setThreadPolicy(policy); 
+		}
+		
 		setContentView(R.layout.main_activity);
 
 		viewActionsContentView = (ActionsContentView) findViewById(R.id.actionsContentView);
